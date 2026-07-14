@@ -5,55 +5,64 @@ const DisclaimerScreen = ({ onAccept }) => {
   return (
     <View style={styles.container}>
       <ScrollView style={styles.content} contentContainerStyle={styles.contentInner}>
-        <Text style={styles.title}>⚠️ 重要な警告</Text>
-        <Text style={styles.subtitle}>Important Disclaimer</Text>
+        <Text style={styles.title}>⚠️ 最終上注意</Text>
+        <Text style={styles.subtitle}>Final Warning Before Using</Text>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>このアプリについて</Text>
-          <Text style={styles.text}>
-            • 医学的アドバイスではありません{"\n"}
-            • 医者ではなく、AIです{"\n"}
-            • 専門的な治療ではありません{"\n"}
-            • 聞く場所です、解決ではありません
+        <View style={styles.criticalSection}>
+          <Text style={styles.criticalTitle}>🚩 これを読んでください</Text>
+          <Text style={styles.criticalText}>
+            このアプリは、医療的な握把を提供していません。これは協会慮炎計画ではありません。自殺を考えている場合、今すぐ電話し、真師に連絡してください。
           </Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>プライバシーについて</Text>
+          <Text style={styles.sectionTitle}>🌙 あなたが受ける もの</Text>
           <Text style={styles.text}>
-            • すべてのデータはあなたの電話に保存されます{"\n"}
-            • サーバーには何も保存されません{"\n"}
-            • 管理者はあなたのチャット履歴を見ることができません{"\n"}
-            • 完全なプライバシーが保証されます
+            • その時の気持ちを話すこと
+            • 耳を傾けてくれる空間
+            • 辛さを理解している存在
+            
+            ずっと、それだけです。他には何を与えても いけていません。
           </Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>あなたの責任</Text>
+          <Text style={styles.sectionTitle}>🚫 あなたが受けないもの</Text>
           <Text style={styles.text}>
-            • 自己責任でご利用ください{"\n"}
-            • 重大な問題がある場合は医師に相談してください{"\n"}
-            • 緊急時は下記の番号にお電話ください{"\n"}
-            • このアプリは責任を持ちません
+            • 医学的アドバイス
+            • 心理療法。カウンセリング
+            • 箋断、治療、解決策
+            • 人生的なナチや決定
+            • 専門的な治療として機能
           </Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>緊急連絡先</Text>
+          <Text style={styles.sectionTitle}>🚨 責任免責</Text>
+          <Text style={styles.text}>
+            • あなたがこのアプリを使って好画なことをしくじったら、作成者を責めないでください
+            • これを使って自殺をしたら、作成者は責任を持ちません
+            • あなたの責任です
+          </Text>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>🏥 緊急連絡先</Text>
           <Text style={styles.emergencyNumber}>いのちの電話: 0570-783-556</Text>
           <Text style={styles.emergencyNumber}>よりそいホットライン: 0120-279-338</Text>
           <Text style={styles.emergencyNumber}>TELL Lifeline: 03-5774-0992</Text>
+          <Text style={styles.emergencySubtext}>今この値段で電話し、真師に連絡してください。</Text>
         </View>
 
         <View style={styles.section}>
           <Text style={styles.warningText}>
-            このアプリは聞く場所です。医療専門家ではありません。緊急時は必ず医師か専門家に連絡してください。
+            このアプリを使用して何かをした際の全てのい責任は、自分にあります。
           </Text>
         </View>
       </ScrollView>
 
       <TouchableOpacity style={styles.acceptButton} onPress={onAccept}>
-        <Text style={styles.acceptButtonText}>同意して続ける</Text>
+        <Text style={styles.acceptButtonText}>画面を進む</Text>
       </TouchableOpacity>
     </View>
   );
@@ -75,7 +84,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#d4af37',
+    color: '#ff6b6b',
     textAlign: 'center',
     marginBottom: 5,
   },
@@ -85,9 +94,31 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 20,
   },
-  section: {
+  criticalSection: {
     marginBottom: 20,
     paddingVertical: 15,
+    paddingHorizontal: 12,
+    backgroundColor: '#3d2015',
+    borderRadius: 8,
+    borderLeftWidth: 4,
+    borderLeftColor: '#ff6b6b',
+    borderWidth: 2,
+    borderColor: '#ff6b6b',
+  },
+  criticalTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#ff6b6b',
+    marginBottom: 8,
+  },
+  criticalText: {
+    fontSize: 12,
+    color: '#ffcccc',
+    lineHeight: 20,
+  },
+  section: {
+    marginBottom: 18,
+    paddingVertical: 12,
     paddingHorizontal: 12,
     backgroundColor: '#2a2015',
     borderRadius: 8,
@@ -95,28 +126,34 @@ const styles = StyleSheet.create({
     borderLeftColor: '#d4af37',
   },
   sectionTitle: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600',
     color: '#d4af37',
     marginBottom: 8,
   },
   text: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#c9b037',
-    lineHeight: 20,
+    lineHeight: 18,
   },
   emergencyNumber: {
     fontSize: 11,
     color: '#ff6b6b',
-    fontWeight: '600',
+    fontWeight: '700',
     marginVertical: 4,
   },
+  emergencySubtext: {
+    fontSize: 10,
+    color: '#ffcccc',
+    marginTop: 8,
+  },
   warningText: {
-    fontSize: 11,
+    fontSize: 12,
     color: '#ff6b6b',
     textAlign: 'center',
     fontStyle: 'italic',
     lineHeight: 18,
+    fontWeight: '600',
   },
   acceptButton: {
     marginHorizontal: 20,

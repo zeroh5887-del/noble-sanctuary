@@ -3,6 +3,7 @@ import { View, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import TermsScreen from './src/screens/TermsScreen';
 import DisclaimerScreen from './src/screens/DisclaimerScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import AdminScreen from './src/screens/AdminScreen';
@@ -11,6 +12,7 @@ import { generateUserCode } from './src/services/userService';
 const Stack = createNativeStackNavigator();
 
 export default function App() {
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [disclaimerAccepted, setDisclaimerAccepted] = useState(false);
   const [userCode, setUserCode] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -22,9 +24,15 @@ export default function App() {
 
   const initializeApp = async () => {
     try {
+      // Check if terms accepted
+      const termsAcc = await AsyncStorage.getItem('termsAccepted');
+      if (termsAcc === 'true') {
+        setTermsAccepted(true);
+      }
+
       // Check if disclaimer accepted
-      const accepted = await AsyncStorage.getItem('disclaimerAccepted');
-      if (accepted === 'true') {
+      const disclaimerAcc = await AsyncStorage.getItem('disclaimerAccepted');
+      if (disclaimerAcc === 'true') {
         setDisclaimerAccepted(true);
       }
 
@@ -45,6 +53,15 @@ export default function App() {
       console.error('Error initializing app:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleTermsAccept = async () => {
+    try {
+      await AsyncStorage.setItem('termsAccepted', 'true');
+      setTermsAccepted(true);
+    } catch (error) {
+      console.error('Error accepting terms:', error);
     }
   };
 
@@ -73,7 +90,16 @@ export default function App() {
           cardStyle: { backgroundColor: '#0f0f0f' },
         }}
       >
-        {!disclaimerAccepted ? (
+        {!termsAccepted ? (
+          <Stack.Screen
+            name="Terms"
+            options={{ animationEnabled: false }}
+          >
+            {(props) => (
+              <TermsScreen {...props} onAccept={handleTermsAccept} />
+            )}
+          </Stack.Screen>
+        ) : !disclaimerAccepted ? (
           <Stack.Screen
             name="Disclaimer"
             options={{ animationEnabled: false }}
