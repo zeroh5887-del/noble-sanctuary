@@ -5,16 +5,16 @@ const DisclaimerScreen = ({ onAccept }) => {
   return (
     <View style={styles.container}>
       <ScrollView style={styles.content} contentContainerStyle={styles.contentInner}>
-        <Text style={styles.title}>重要な免責事項</Text>
+        <Text style={styles.title}>⚠️ 重要な警告</Text>
         <Text style={styles.subtitle}>Important Disclaimer</Text>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>このアプリについて</Text>
           <Text style={styles.text}>
             • 医学的アドバイスではありません{"\n"}
-            • カウンセリングサービスではありません{"\n"}
-            • 精神科医の診断ツールではありません{"\n"}
-            • 話を聞く場所です
+            • 医者ではなく、AIです{"\n"}
+            • 専門的な治療ではありません{"\n"}
+            • 聞く場所です、解決ではありません
           </Text>
         </View>
 
@@ -33,7 +33,8 @@ const DisclaimerScreen = ({ onAccept }) => {
           <Text style={styles.text}>
             • 自己責任でご利用ください{"\n"}
             • 重大な問題がある場合は医師に相談してください{"\n"}
-            • 緊急時は下記の番号にお電話ください
+            • 緊急時は下記の番号にお電話ください{"\n"}
+            • このアプリは責任を持ちません
           </Text>
         </View>
 
@@ -46,7 +47,7 @@ const DisclaimerScreen = ({ onAccept }) => {
 
         <View style={styles.section}>
           <Text style={styles.warningText}>
-            このアプリは聞く場所です。医療専門家ではありません。
+            このアプリは聞く場所です。医療専門家ではありません。緊急時は必ず医師か専門家に連絡してください。
           </Text>
         </View>
       </ScrollView>
@@ -61,7 +62,8 @@ const DisclaimerScreen = ({ onAccept }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0f0f0f',
+    backgroundColor: '#1a1410',
+    marginTop: 40,
   },
   content: {
     flex: 1,
@@ -73,13 +75,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#fff',
+    color: '#d4af37',
     textAlign: 'center',
     marginBottom: 5,
   },
   subtitle: {
-    fontSize: 14,
-    color: '#999',
+    fontSize: 12,
+    color: '#8b7355',
     textAlign: 'center',
     marginBottom: 20,
   },
@@ -87,46 +89,47 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     paddingVertical: 15,
     paddingHorizontal: 12,
-    backgroundColor: '#1a1a1a',
+    backgroundColor: '#2a2015',
     borderRadius: 8,
     borderLeftWidth: 3,
-    borderLeftColor: '#1e3a8a',
+    borderLeftColor: '#d4af37',
   },
   sectionTitle: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
-    color: '#4db8ff',
+    color: '#d4af37',
     marginBottom: 8,
   },
   text: {
-    fontSize: 13,
-    color: '#ccc',
+    fontSize: 12,
+    color: '#c9b037',
     lineHeight: 20,
   },
   emergencyNumber: {
-    fontSize: 12,
-    color: '#ff4d4d',
+    fontSize: 11,
+    color: '#ff6b6b',
     fontWeight: '600',
     marginVertical: 4,
   },
   warningText: {
-    fontSize: 12,
-    color: '#ff4d4d',
+    fontSize: 11,
+    color: '#ff6b6b',
     textAlign: 'center',
     fontStyle: 'italic',
+    lineHeight: 18,
   },
   acceptButton: {
     marginHorizontal: 20,
     marginBottom: 20,
     paddingVertical: 14,
-    backgroundColor: '#1e3a8a',
+    backgroundColor: '#d4af37',
     borderRadius: 8,
     alignItems: 'center',
   },
   acceptButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+    color: '#1a1410',
+    fontSize: 14,
+    fontWeight: '700',
   },
 });
 

@@ -1,28 +1,23 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Keyboard } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Keyboard, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getAIResponse } from '../services/aiService';
+import { getAncientAIResponse } from '../services/ancientAiService';
 
-const HomeScreen = () => {
+const HomeScreen = ({ userCode }) => {
   const [messages, setMessages] = useState([]);
   const [userInput, setUserInput] = useState('');
-  const [timeRemaining, setTimeRemaining] = useState(7200); // 2 hours in seconds
+  const [timeRemaining, setTimeRemaining] = useState(7200);
   const [isLoading, setIsLoading] = useState(false);
+  const [showTranslation, setShowTranslation] = useState(false);
+  const [translations, setTranslations] = useState({});
   const scrollViewRef = useRef();
-  const dailyLimitRef = useRef(null);
 
-  // Initialize daily timer on app start
   useEffect(() => {
     checkDailyLimit();
     startTimer();
-  }, []);
-
-  // Load previous messages
-  useEffect(() => {
     loadMessages();
   }, []);
 
-  // Auto-scroll to bottom
   useEffect(() => {
     if (scrollViewRef.current) {
       scrollViewRef.current.scrollToEnd({ animated: true });
@@ -35,12 +30,10 @@ const HomeScreen = () => {
       const today = new Date().toDateString();
       
       if (lastDate !== today) {
-        // New day, reset timer
         await AsyncStorage.setItem('lastDate', today);
         await AsyncStorage.setItem('timeUsedToday', '0');
         setTimeRemaining(7200);
       } else {
-        // Same day, get remaining time
         const timeUsed = parseInt(await AsyncStorage.getItem('timeUsedToday') || '0');
         setTimeRemaining(Math.max(0, 7200 - timeUsed));
       }
@@ -59,8 +52,6 @@ const HomeScreen = () => {
         return prev - 1;
       });
     }, 1000);
-
-    dailyLimitRef.current = interval;
     return () => clearInterval(interval);
   };
 
@@ -86,7 +77,6 @@ const HomeScreen = () => {
   const handleSendMessage = async () => {
     if (!userInput.trim() || isLoading || timeRemaining <= 0) return;
 
-    // Add user message
     const userMessage = {
       id: Date.now(),
       text: userInput,
@@ -100,15 +90,17 @@ const HomeScreen = () => {
     setUserInput('');
     Keyboard.dismiss();
 
-    // Get AI response
     setIsLoading(true);
     try {
-      const aiResponse = await getAIResponse(userInput);
+      const response = await getAncientAIResponse(userInput);
+      
       const aiMessage = {
         id: Date.now() + 1,
-        text: aiResponse,
+        text: response.text,
         sender: 'ai',
-        timestamp: new Date().toLocaleTimeString('ja-JP')
+        timestamp: new Date().toLocaleTimeString('ja-JP'),
+        isCrisis: response.isCrisis,
+        type: response.type
       };
       
       const finalMessages = [...updatedMessages, aiMessage];
@@ -118,6 +110,14 @@ const HomeScreen = () => {
       // Update time used
       const timeUsed = parseInt(await AsyncStorage.getItem('timeUsedToday') || '0');
       await AsyncStorage.setItem('timeUsedToday', String(timeUsed + 1));
+
+      // If crisis, notify
+      if (response.isCrisis) {
+        Alert.alert(
+          '⚠️ 緊急',
+          'あなたの安全が心配です。今すぐ専門家に連絡してください。'
+        );
+      }
     } catch (error) {
       console.error('Error getting AI response:', error);
     }
@@ -131,12 +131,29 @@ const HomeScreen = () => {
     return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const requestAdminContact = () => {
+    Alert.alert(
+      '管理者に連絡',
+      'あなたのコード: ' + userCode + '\n\nこのコードを管理者に送ってください。管理者はあなたと話すためにアプリに通知を受け取ります。',
+      [
+        { text: 'キャンセル', onPress: () => {}, style: 'cancel' },
+        { text: 'コピーしました', onPress: () => {} }
+      ]
+    );
+  };
+
   return (
     <View style={styles.container}>
+      {/* Warning Banner */}
+      <View style={styles.warningBanner}>
+        <Text style={styles.warningText}>⚠️ 警告: このアプリは医療ではありません。緊急時は専門家に連絡してください。</Text>
+      </View>
+
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>高貴なる庭園</Text>
         <Text style={styles.subtitle}>Noble Sanctuary</Text>
+        <Text style={styles.userCode}>コード: {userCode}</Text>
         <View style={styles.timerContainer}>
           <Text style={styles.timerText}>今日の時間: {formatTime(timeRemaining)}</Text>
           {timeRemaining <= 0 && <Text style={styles.limitReached}>本日の利用時間に達しました</Text>}
@@ -153,7 +170,7 @@ const HomeScreen = () => {
           <View style={styles.emptyState}>
             <Text style={styles.emptyTitle}>ようこそ</Text>
             <Text style={styles.emptyText}>あなたの想いを聞かせてください</Text>
-            <Text style={styles.emptySubtext}>心の奥底にある想いを、ここで共有してください</Text>
+            <Text style={styles.emptySubtext}>ここは安全な場所です</Text>
           </View>
         ) : (
           messages.map((msg) => (
@@ -161,7 +178,8 @@ const HomeScreen = () => {
               key={msg.id} 
               style={[
                 styles.messageBubble,
-                msg.sender === 'user' ? styles.userMessage : styles.aiMessage
+                msg.sender === 'user' ? styles.userMessage : styles.aiMessage,
+                msg.isCrisis && styles.crisisMessage
               ]}
             >
               <Text style={styles.messageText}>{msg.text}</Text>
@@ -177,7 +195,7 @@ const HomeScreen = () => {
           <TextInput
             style={styles.input}
             placeholder="想いを共有してください..."
-            placeholderTextColor="#888"
+            placeholderTextColor="#8b7355"
             value={userInput}
             onChangeText={setUserInput}
             multiline
@@ -199,6 +217,11 @@ const HomeScreen = () => {
           <Text style={styles.emergencyNumber}>いのちの電話: 0570-783-556</Text>
         </View>
       )}
+
+      {/* Admin Request Button */}
+      <TouchableOpacity style={styles.adminButton} onPress={requestAdminContact}>
+        <Text style={styles.adminButtonText}>管理者に連絡</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -206,44 +229,63 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0f0f0f',
+    backgroundColor: '#1a1410',
+  },
+  warningBanner: {
+    backgroundColor: '#8b4513',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    marginTop: 40,
+  },
+  warningText: {
+    color: '#d4af37',
+    fontSize: 11,
+    fontWeight: '600',
+    textAlign: 'center',
   },
   header: {
-    backgroundColor: '#1a1a1a',
-    paddingTop: 60,
+    backgroundColor: '#2a2015',
     paddingHorizontal: 20,
-    paddingBottom: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#333',
+    paddingVertical: 15,
+    borderBottomWidth: 2,
+    borderBottomColor: '#d4af37',
   },
   title: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#fff',
+    color: '#d4af37',
     textAlign: 'center',
     marginBottom: 5,
   },
   subtitle: {
-    fontSize: 14,
-    color: '#999',
+    fontSize: 12,
+    color: '#c9b037',
     textAlign: 'center',
-    marginBottom: 15,
+    marginBottom: 5,
+  },
+  userCode: {
+    fontSize: 10,
+    color: '#8b7355',
+    textAlign: 'center',
+    marginBottom: 10,
   },
   timerContainer: {
-    backgroundColor: '#2a2a2a',
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderRadius: 8,
+    backgroundColor: '#1a1410',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    borderLeftWidth: 3,
+    borderLeftColor: '#d4af37',
   },
   timerText: {
-    color: '#4db8ff',
-    fontSize: 12,
+    color: '#d4af37',
+    fontSize: 11,
     textAlign: 'center',
     fontWeight: '600',
   },
   limitReached: {
-    color: '#ff4d4d',
-    fontSize: 11,
+    color: '#ff6b6b',
+    fontSize: 10,
     textAlign: 'center',
     marginTop: 5,
   },
@@ -263,18 +305,18 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 24,
     fontWeight: '600',
-    color: '#fff',
+    color: '#d4af37',
     marginBottom: 10,
   },
   emptyText: {
-    fontSize: 16,
-    color: '#999',
+    fontSize: 14,
+    color: '#c9b037',
     marginBottom: 5,
     textAlign: 'center',
   },
   emptySubtext: {
-    fontSize: 12,
-    color: '#666',
+    fontSize: 11,
+    color: '#8b7355',
     textAlign: 'center',
   },
   messageBubble: {
@@ -286,44 +328,54 @@ const styles = StyleSheet.create({
   },
   userMessage: {
     alignSelf: 'flex-end',
-    backgroundColor: '#1e3a8a',
+    backgroundColor: '#3d3020',
+    borderLeftWidth: 3,
+    borderLeftColor: '#d4af37',
   },
   aiMessage: {
     alignSelf: 'flex-start',
-    backgroundColor: '#2a2a2a',
+    backgroundColor: '#2a2015',
+    borderLeftWidth: 3,
+    borderLeftColor: '#c9b037',
+  },
+  crisisMessage: {
+    backgroundColor: '#8b4513',
+    borderLeftColor: '#ff6b6b',
   },
   messageText: {
-    color: '#fff',
-    fontSize: 14,
+    color: '#d4af37',
+    fontSize: 13,
     lineHeight: 20,
   },
   messageTime: {
-    color: '#888',
-    fontSize: 10,
+    color: '#8b7355',
+    fontSize: 9,
     marginTop: 5,
   },
   inputContainer: {
     flexDirection: 'row',
     paddingHorizontal: 15,
     paddingVertical: 10,
-    backgroundColor: '#1a1a1a',
-    borderTopWidth: 1,
-    borderTopColor: '#333',
+    backgroundColor: '#2a2015',
+    borderTopWidth: 2,
+    borderTopColor: '#d4af37',
     alignItems: 'flex-end',
   },
   input: {
     flex: 1,
-    backgroundColor: '#2a2a2a',
-    color: '#fff',
+    backgroundColor: '#1a1410',
+    color: '#d4af37',
     borderRadius: 20,
     paddingHorizontal: 15,
     paddingVertical: 10,
     marginRight: 10,
-    fontSize: 14,
+    fontSize: 13,
     maxHeight: 100,
+    borderWidth: 1,
+    borderColor: '#8b7355',
   },
   sendButton: {
-    backgroundColor: '#1e3a8a',
+    backgroundColor: '#d4af37',
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 20,
@@ -332,33 +384,49 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   sendButtonText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 14,
+    color: '#1a1410',
+    fontWeight: '700',
+    fontSize: 13,
   },
   limitContainer: {
     paddingHorizontal: 15,
     paddingVertical: 15,
-    backgroundColor: '#1a1a1a',
-    borderTopWidth: 1,
-    borderTopColor: '#333',
+    backgroundColor: '#2a2015',
+    borderTopWidth: 2,
+    borderTopColor: '#d4af37',
   },
   limitMessage: {
-    color: '#ff4d4d',
-    fontSize: 14,
+    color: '#ff6b6b',
+    fontSize: 13,
     textAlign: 'center',
     marginBottom: 10,
+    fontWeight: '600',
   },
   emergencyText: {
-    color: '#fff',
-    fontSize: 12,
+    color: '#d4af37',
+    fontSize: 11,
     textAlign: 'center',
     marginBottom: 5,
   },
   emergencyNumber: {
-    color: '#4db8ff',
-    fontSize: 12,
+    color: '#ff6b6b',
+    fontSize: 11,
     textAlign: 'center',
+    fontWeight: '600',
+  },
+  adminButton: {
+    marginHorizontal: 15,
+    marginBottom: 10,
+    paddingVertical: 10,
+    backgroundColor: '#8b7355',
+    borderRadius: 8,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#d4af37',
+  },
+  adminButtonText: {
+    color: '#d4af37',
+    fontSize: 12,
     fontWeight: '600',
   },
 });

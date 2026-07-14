@@ -1,1 +1,118 @@
-import React, { useState, useEffect } from 'react';\nimport { View, StyleSheet } from 'react-native';\nimport AsyncStorage from '@react-native-async-storage/async-storage';\nimport { NavigationContainer } from '@react-navigation/native';\nimport { createNativeStackNavigator } from '@react-navigation/native-stack';\nimport DisclaimerScreen from './src/screens/DisclaimerScreen';\nimport HomeScreen from './src/screens/HomeScreen';\nimport AdminScreen from './src/screens/AdminScreen';\nimport { generateUserCode } from './src/services/userService';\n\nconst Stack = createNativeStackNavigator();\n\nexport default function App() {\n  const [disclaimerAccepted, setDisclaimerAccepted] = useState(false);\n  const [userCode, setUserCode] = useState(null);\n  const [isAdmin, setIsAdmin] = useState(false);\n  const [isLoading, setIsLoading] = useState(true);\n\n  useEffect(() => {\n    initializeApp();\n  }, []);\n\n  const initializeApp = async () => {\n    try {\n      // Check if disclaimer accepted\n      const accepted = await AsyncStorage.getItem('disclaimerAccepted');\n      if (accepted === 'true') {\n        setDisclaimerAccepted(true);\n      }\n\n      // Get or create user code\n      let code = await AsyncStorage.getItem('userCode');\n      if (!code) {\n        code = generateUserCode();\n        await AsyncStorage.setItem('userCode', code);\n      }\n      setUserCode(code);\n\n      // Check if admin\n      const adminStatus = await AsyncStorage.getItem('isAdmin');\n      if (adminStatus === 'true') {\n        setIsAdmin(true);\n      }\n    } catch (error) {\n      console.error('Error initializing app:', error);\n    } finally {\n      setIsLoading(false);\n    }\n  };\n\n  const handleDisclaimerAccept = async () => {\n    try {\n      await AsyncStorage.setItem('disclaimerAccepted', 'true');\n      setDisclaimerAccepted(true);\n    } catch (error) {\n      console.error('Error accepting disclaimer:', error);\n    }\n  };\n\n  if (isLoading) {\n    return (\n      <View style={styles.loadingContainer}>\n        <View style={styles.loadingContent} />\n      </View>\n    );\n  }\n\n  return (\n    <NavigationContainer>\n      <Stack.Navigator\n        screenOptions={{\n          headerShown: false,\n          cardStyle: { backgroundColor: '#0f0f0f' },\n        }}\n      >\n        {!disclaimerAccepted ? (\n          <Stack.Screen\n            name=\"Disclaimer\"\n            options={{ animationEnabled: false }}\n          >\n            {(props) => (\n              <DisclaimerScreen {...props} onAccept={handleDisclaimerAccept} />\n            )}\n          </Stack.Screen>\n        ) : isAdmin ? (\n          <Stack.Screen\n            name=\"Admin\"\n            options={{ animationEnabled: false }}\n          >\n            {(props) => <AdminScreen {...props} userCode={userCode} />}\n          </Stack.Screen>\n        ) : (\n          <Stack.Screen\n            name=\"Home\"\n            options={{ animationEnabled: false }}\n          >\n            {(props) => <HomeScreen {...props} userCode={userCode} />}\n          </Stack.Screen>\n        )}\n      </Stack.Navigator>\n    </NavigationContainer>\n  );\n}\n\nconst styles = StyleSheet.create({\n  loadingContainer: {\n    flex: 1,\n    backgroundColor: '#0f0f0f',\n    justifyContent: 'center',\n    alignItems: 'center',\n  },\n  loadingContent: {\n    width: 60,\n    height: 60,\n    backgroundColor: '#d4af37',\n    borderRadius: 30,\n  },\n});\n
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import DisclaimerScreen from './src/screens/DisclaimerScreen';
+import HomeScreen from './src/screens/HomeScreen';
+import AdminScreen from './src/screens/AdminScreen';
+import { generateUserCode } from './src/services/userService';
+
+const Stack = createNativeStackNavigator();
+
+export default function App() {
+  const [disclaimerAccepted, setDisclaimerAccepted] = useState(false);
+  const [userCode, setUserCode] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    initializeApp();
+  }, []);
+
+  const initializeApp = async () => {
+    try {
+      // Check if disclaimer accepted
+      const accepted = await AsyncStorage.getItem('disclaimerAccepted');
+      if (accepted === 'true') {
+        setDisclaimerAccepted(true);
+      }
+
+      // Get or create user code
+      let code = await AsyncStorage.getItem('userCode');
+      if (!code) {
+        code = generateUserCode();
+        await AsyncStorage.setItem('userCode', code);
+      }
+      setUserCode(code);
+
+      // Check if admin
+      const adminStatus = await AsyncStorage.getItem('isAdmin');
+      if (adminStatus === 'true') {
+        setIsAdmin(true);
+      }
+    } catch (error) {
+      console.error('Error initializing app:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDisclaimerAccept = async () => {
+    try {
+      await AsyncStorage.setItem('disclaimerAccepted', 'true');
+      setDisclaimerAccepted(true);
+    } catch (error) {
+      console.error('Error accepting disclaimer:', error);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <View style={styles.loadingContent} />
+      </View>
+    );
+  }
+
+  return (
+    <NavigationContainer>
+      <Stack.Navigator
+        screenOptions={{
+          headerShown: false,
+          cardStyle: { backgroundColor: '#0f0f0f' },
+        }}
+      >
+        {!disclaimerAccepted ? (
+          <Stack.Screen
+            name="Disclaimer"
+            options={{ animationEnabled: false }}
+          >
+            {(props) => (
+              <DisclaimerScreen {...props} onAccept={handleDisclaimerAccept} />
+            )}
+          </Stack.Screen>
+        ) : isAdmin ? (
+          <Stack.Screen
+            name="Admin"
+            options={{ animationEnabled: false }}
+          >
+            {(props) => <AdminScreen {...props} userCode={userCode} />}
+          </Stack.Screen>
+        ) : (
+          <Stack.Screen
+            name="Home"
+            options={{ animationEnabled: false }}
+          >
+            {(props) => <HomeScreen {...props} userCode={userCode} />}
+          </Stack.Screen>
+        )}
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+}
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: '#0f0f0f',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingContent: {
+    width: 60,
+    height: 60,
+    backgroundColor: '#d4af37',
+    borderRadius: 30,
+  },
+});
