@@ -1,14 +1,23 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useState } from 'react';
+import { useNavigation } from '@react-navigation/native';
 
 const TermsScreen = ({ onAccept }) => {
   const [checkbox1, setCheckbox1] = useState(false);
   const [checkbox2, setCheckbox2] = useState(false);
   const [checkbox3, setCheckbox3] = useState(false);
   const [checkbox4, setCheckbox4] = useState(false);
+  const navigation = useNavigation();
 
   const allChecked = checkbox1 && checkbox2 && checkbox3 && checkbox4;
+
+  const handleAccept = () => {
+    if (allChecked) {
+      onAccept();
+      navigation.replace('Disclaimer');
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -129,7 +138,7 @@ const TermsScreen = ({ onAccept }) => {
 
       <TouchableOpacity 
         style={[styles.acceptButton, !allChecked && styles.acceptButtonDisabled]} 
-        onPress={onAccept}
+        onPress={handleAccept}
         disabled={!allChecked}
       >
         <Text style={styles.acceptButtonText}>一進む</Text>
