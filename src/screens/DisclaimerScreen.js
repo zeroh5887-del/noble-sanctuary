@@ -1,22 +1,47 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 
-const DisclaimerScreen = ({ onAccept }) => {
+const DisclaimerScreen = ({ onAccept, viewCount = 0, maxViews = 3 }) => {
+  const navigation = useNavigation();
+
+  const handleAccept = () => {
+    onAccept();
+    
+    // Check if we've shown disclaimer enough times
+    if (viewCount + 1 >= maxViews) {
+      // All 3 views complete - go to chat
+      navigation.replace('Home');
+    } else {
+      // Show again - go back to Terms for another cycle
+      navigation.replace('Terms');
+    }
+  };
+
+  const remainingViews = maxViews - viewCount - 1;
+
   return (
     <View style={styles.container}>
       <ScrollView style={styles.content} contentContainerStyle={styles.contentInner}>
         <Text style={styles.title}>⚠️ 最終上注意</Text>
         <Text style={styles.subtitle}>Final Warning Before Using</Text>
 
+        {/* View Counter */}
+        <View style={styles.viewCounterSection}>
+          <Text style={styles.viewCounterText}>
+            残り確認: {remainingViews} / {maxViews - 1}
+          </Text>
+        </View>
+
         <View style={styles.criticalSection}>
           <Text style={styles.criticalTitle}>🚩 これを読んでください</Text>
           <Text style={styles.criticalText}>
-            このアプリは、医療的な握把を提供していません。これは協会慮炎計画ではありません。自殺を考えている場合、今すぐ電話し、真師に連絡してください。
+            このアプリは、医療的な握保を提供していません。これは協会慮炎計画ではありません。自殺を考えている場合、今すぐ電話し、真師に連絡してください。
           </Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🌙 あなたが受ける もの</Text>
+          <Text style={styles.sectionTitle}>🌙 あなたが受けるもの</Text>
           <Text style={styles.text}>
             • その時の気持ちを話すこと
             • 耳を傾けてくれる空間
@@ -61,8 +86,10 @@ const DisclaimerScreen = ({ onAccept }) => {
         </View>
       </ScrollView>
 
-      <TouchableOpacity style={styles.acceptButton} onPress={onAccept}>
-        <Text style={styles.acceptButtonText}>画面を進む</Text>
+      <TouchableOpacity style={styles.acceptButton} onPress={handleAccept}>
+        <Text style={styles.acceptButtonText}>
+          {remainingViews > 0 ? '確認しました' : 'チャットを始める'}
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -93,6 +120,21 @@ const styles = StyleSheet.create({
     color: '#8b7355',
     textAlign: 'center',
     marginBottom: 20,
+  },
+  viewCounterSection: {
+    marginBottom: 15,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    backgroundColor: '#3d2015',
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: '#d4af37',
+  },
+  viewCounterText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#d4af37',
+    textAlign: 'center',
   },
   criticalSection: {
     marginBottom: 20,
