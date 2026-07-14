@@ -12,11 +12,11 @@ import { generateUserCode } from './src/services/userService';
 const Stack = createNativeStackNavigator();
 
 export default function App() {
-  const [termsAccepted, setTermsAccepted] = useState(false);
-  const [disclaimerAccepted, setDisclaimerAccepted] = useState(false);
+  const [disclaimerViewCount, setDisclaimerViewCount] = useState(0);
   const [userCode, setUserCode] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const MAX_DISCLAIMER_VIEWS = 3;
 
   useEffect(() => {
     initializeApp();
@@ -24,16 +24,19 @@ export default function App() {
 
   const initializeApp = async () => {
     try {
-      // Check if terms accepted
-      const termsAcc = await AsyncStorage.getItem('termsAccepted');
-      if (termsAcc === 'true') {
-        setTermsAccepted(true);
-      }
-
-      // Check if disclaimer accepted
-      const disclaimerAcc = await AsyncStorage.getItem('disclaimerAccepted');
-      if (disclaimerAcc === 'true') {
-        setDisclaimerAccepted(true);
+      // Check disclaimer view count for today
+      const lastDate = await AsyncStorage.getItem('disclaimerLastDate');
+      const today = new Date().toDateString();
+      
+      if (lastDate !== today) {
+        // New day - reset counter
+        await AsyncStorage.setItem('disclaimerLastDate', today);
+        await AsyncStorage.setItem('disclaimerViewCount', '0');
+        setDisclaimerViewCount(0);
+      } else {
+        // Same day - get current count
+        const count = parseInt(await AsyncStorage.getItem('disclaimerViewCount') || '0');
+        setDisclaimerViewCount(count);
       }
 
       // Get or create user code
@@ -56,21 +59,13 @@ export default function App() {
     }
   };
 
-  const handleTermsAccept = async () => {
+  const handleDisclaimerComplete = async () => {
     try {
-      await AsyncStorage.setItem('termsAccepted', 'true');
-      setTermsAccepted(true);
+      const newCount = disclaimerViewCount + 1;
+      await AsyncStorage.setItem('disclaimerViewCount', String(newCount));
+      setDisclaimerViewCount(newCount);
     } catch (error) {
-      console.error('Error accepting terms:', error);
-    }
-  };
-
-  const handleDisclaimerAccept = async () => {
-    try {
-      await AsyncStorage.setItem('disclaimerAccepted', 'true');
-      setDisclaimerAccepted(true);
-    } catch (error) {
-      console.error('Error accepting disclaimer:', error);
+      console.error('Error updating disclaimer view count:', error);
     }
   };
 
@@ -90,24 +85,30 @@ export default function App() {
           cardStyle: { backgroundColor: '#0f0f0f' },
         }}
       >
-        {!termsAccepted ? (
-          <Stack.Screen
-            name="Terms"
-            options={{ animationEnabled: false }}
-          >
-            {(props) => (
-              <TermsScreen {...props} onAccept={handleTermsAccept} />
-            )}
-          </Stack.Screen>
-        ) : !disclaimerAccepted ? (
-          <Stack.Screen
-            name="Disclaimer"
-            options={{ animationEnabled: false }}
-          >
-            {(props) => (
-              <DisclaimerScreen {...props} onAccept={handleDisclaimerAccept} />
-            )}
-          </Stack.Screen>
+        {disclaimerViewCount < MAX_DISCLAIMER_VIEWS ? (
+          <>
+            <Stack.Screen
+              name="Terms"
+              options={{ animationEnabled: false }}
+            >
+              {(props) => (
+                <TermsScreen {...props} onAccept={handleDisclaimerComplete} />
+              )}
+            </Stack.Screen>
+            <Stack.Screen
+              name="Disclaimer"
+              options={{ animationEnabled: false }}
+            >
+              {(props) => (
+                <DisclaimerScreen 
+                  {...props} 
+                  onAccept={handleDisclaimerComplete}
+                  viewCount={disclaimerViewCount}
+                  maxViews={MAX_DISCLAIMER_VIEWS}
+                />
+              )}
+            </Stack.Screen>
+          </>
         ) : isAdmin ? (
           <Stack.Screen
             name="Admin"
